@@ -18,7 +18,7 @@ describe 'Store Verification', ->
 
     octobluRaven = express: => handleErrors: => (req, res, next) => next()
 
-    @sut     = new Server {client, octobluRaven, disableLogging: true}
+    @sut = new Server {client, octobluRaven, disableLogging: true, username: 'bobby', password: 'drop tables'}
     @sut.run done
 
   afterEach (done) ->
@@ -31,6 +31,7 @@ describe 'Store Verification', ->
 
         options =
           baseUrl: "http://localhost:#{@sut.address().port}"
+          auth: {username: 'bobby', password: 'drop tables'}
           json:
             success: true
             expires: @expiration
@@ -62,6 +63,7 @@ describe 'Store Verification', ->
 
         options =
           baseUrl: "http://localhost:#{@sut.address().port}"
+          auth: {username: 'bobby', password: 'drop tables'}
           json:
             success: true
             expires: @expiration

@@ -1,3 +1,4 @@
+basicAuth            = require 'basic-auth-connect'
 cors                 = require 'cors'
 morgan               = require 'morgan'
 express              = require 'express'
@@ -11,9 +12,11 @@ Router               = require './router'
 VerificationsService = require './services/verifications-service'
 
 class Server
-  constructor: ({@client, @disableLogging, @port, @octobluRaven})->
+  constructor: ({@client, @disableLogging, @port, @octobluRaven, @username, @password})->
     @octobluRaven ?= new OctobluRaven()
     throw new Error 'Missing required parameter: client' unless @client?
+    throw new Error 'Missing required parameter: username' unless @username?
+    throw new Error 'Missing required parameter: password' unless @password?
     @verificationsService = new VerificationsService {@client}
 
   address: =>
@@ -29,6 +32,7 @@ class Server
     app.use cors()
     app.use bodyParser.urlencoded limit: '1mb', extended : true
     app.use bodyParser.json limit : '1mb'
+    app.use basicAuth @username, @password
 
     app.options '*', cors()
 

@@ -17,11 +17,17 @@ describe 'Get last Verification', ->
 
     octobluRaven = express: => handleErrors: => (req, res, next) => next()
 
-    @sut     = new Server {client, octobluRaven, disableLogging: true}
+    @sut     = new Server {client, octobluRaven, disableLogging: true, username: 'billy', password: 'goat'}
     @sut.run done
 
   afterEach (done) ->
     @sut.stop done
+
+  beforeEach ->
+    @requestDefaults =
+      baseUrl: "http://localhost:#{@sut.address().port}"
+      json: true
+      auth: {username: 'billy', password: 'goat'}
 
   describe 'GET /verifications/foo/latest', ->
     describe 'when a verification is not expired and successful', ->
@@ -30,8 +36,7 @@ describe 'Get last Verification', ->
         @client.lpush 'verifications:bob', JSON.stringify({name: 'bob', success: true, expires: @expiration}), done
 
       beforeEach (done) ->
-        options = baseUrl: "http://localhost:#{@sut.address().port}", json: true
-        request.get '/verifications/bob/latest', options, (error, @response, @body) =>
+        request.get '/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
           done error
 
       it 'should respond with a 200', ->
@@ -50,8 +55,7 @@ describe 'Get last Verification', ->
         @client.lpush 'verifications:bob', JSON.stringify({name: 'bob', success: false, expires: @expiration}), done
 
       beforeEach (done) ->
-        options = baseUrl: "http://localhost:#{@sut.address().port}", json: true
-        request.get '/verifications/bob/latest', options, (error, @response, @body) =>
+        request.get '/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
           done error
 
       it 'should respond with a 200', ->
@@ -70,8 +74,7 @@ describe 'Get last Verification', ->
         @client.lpush 'verifications:bob', JSON.stringify({name: 'bob', success: true, expires: @expiration}), done
 
       beforeEach (done) ->
-        options = baseUrl: "http://localhost:#{@sut.address().port}", json: true
-        request.get '/verifications/bob/latest', options, (error, @response, @body) =>
+        request.get '/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
           done error
 
       it 'should respond with a 410', ->
@@ -84,8 +87,7 @@ describe 'Get last Verification', ->
 
     describe 'when a verification does not exist', ->
       beforeEach (done) ->
-        options = baseUrl: "http://localhost:#{@sut.address().port}", json: true
-        request.get '/verifications/non-extant/latest', options, (error, @response, @body) =>
+        request.get '/verifications/non-extant/latest', @requestDefaults, (error, @response, @body) =>
           done error
 
       it 'should respond with a 404', ->
