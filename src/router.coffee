@@ -6,5 +6,6 @@ class Router
 
   route: (app) =>
     app.post '/verifications/:name', @verificationsController.create
+    app.get  '/verifications/:name/latest', @verificationsController.getLatest
 
 module.exports = Router
