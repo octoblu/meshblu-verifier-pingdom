@@ -1,12 +1,10 @@
-MeshbluVerifierPingdomController = require './controllers/meshblu-verifier-pingdom-controller'
+VerificationsController = require './controllers/verifications-controller'
 
 class Router
-  constructor: ({@meshbluVerifierPingdomService}) ->
+  constructor: ({@verificationsService}) ->
+    @verificationsController = new VerificationsController {@verificationsService}
 
   route: (app) =>
-    meshbluVerifierPingdomController = new MeshbluVerifierPingdomController {@meshbluVerifierPingdomService}
-
-    app.get '/hello', meshbluVerifierPingdomController.hello
-    # e.g. app.put '/resource/:id', someController.update
+    app.post '/verifications/:name', @verificationsController.create
 
 module.exports = Router
