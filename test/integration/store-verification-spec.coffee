@@ -2,6 +2,7 @@
 {expect} = require 'chai'
 
 redis   = require 'fakeredis'
+moment  = require 'moment'
 RedisNS = require '@octoblu/redis-ns'
 request = require 'request'
 uuid    = require 'uuid'
@@ -24,10 +25,13 @@ describe 'Store Verification', ->
 
   describe 'POST /verifications/foo/', ->
     beforeEach (done) ->
+      @expiration = moment().add(2, 'minutes').valueOf()
+
       options =
         baseUrl: "http://localhost:#{@sut.address().port}"
         json:
           success: true
+          expires: @expiration
 
       request.post '/verifications/foo', options, (error, @response) => done error
 
@@ -41,5 +45,6 @@ describe 'Store Verification', ->
         expect(verification).to.deep.equal {
           name: 'foo'
           success: true
+          expires: @expiration
         }
         done()

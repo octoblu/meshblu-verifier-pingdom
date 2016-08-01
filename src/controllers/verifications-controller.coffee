@@ -2,7 +2,13 @@ class VerificationsController
   constructor: ({@verificationsService}) ->
 
   create: (request, response) =>
-    @verificationsService.create { name: request.params.name, success: request.body.success }, (error) =>
+    verification = {
+      name:    request.params.name
+      success: request.body.success
+      expires: request.body.expires
+    }
+
+    @verificationsService.create verification, (error) =>
       return response.sendError error if error?
       response.sendStatus(201)
 
