@@ -30,11 +30,15 @@ class VerificationsService
 
   _buildRecord: ({name, success, expires}) =>
     dateStr = moment().format("YYYY-MM-DD")
+    index   = "#{@elasticsearchIndex}-#{dateStr}"
+
     return {
-      index: "#{@elasticsearchIndex}-#{dateStr}"
+      index: index
       type: name
-      date: moment().valueOf()
       body:
+        index: index
+        type: name
+        date: moment().valueOf()
         metadata: {name, success, expires}
     }
 

@@ -55,10 +55,12 @@ describe 'Store Verification', ->
           index: "verification:meshblu-protocol-#{dateStr}"
           type: 'foo'
           body: {
+            index: "verification:meshblu-protocol-#{dateStr}"
+            type: 'foo'
             metadata:
               name: 'foo'
               success: true
               expires: @expiration
           }
         }
-        expect(arg.date).to.be.closeTo now, 100
+        expect(arg.body.date).to.be.closeTo now, 100
