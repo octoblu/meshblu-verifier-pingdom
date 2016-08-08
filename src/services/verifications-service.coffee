@@ -1,19 +1,41 @@
+_      = require 'lodash'
+moment = require 'moment'
+
 class VerificationsService
-  constructor: ({@client}) ->
-    throw new Error 'Missing required parameter: client' unless @client?
+  constructor: ({@elasticsearch, @elasticsearchIndex}) ->
+    throw new Error 'Missing required parameter: elasticsearch' unless @elasticsearch?
+    throw new Error 'Missing required parameter: elasticsearchIndex' unless @elasticsearchIndex?
 
   create: ({name, success, expires}, callback) =>
-    @client.lpush @_key({name}), JSON.stringify({name, success, expires}), (error) =>
-      return callback error if error?
-      @client.ltrim @_key({name}), 0, 999, callback
+    record = @_buildRecord({name, success, expires})
+
+    @elasticsearch.create record, (error) =>
+      callback error
+
 
   getLatest: ({name}, callback) =>
-    @client.lindex @_key({name}), 0, (error, verificationStr) =>
-      return callback error if error?
-      return callback null unless verificationStr?
-      {name, success, expires} = JSON.parse(verificationStr)
-      return callback null, {name, success, expires}
+    query = {
+      index: "#{@elasticsearchIndex}*"
+      type: name
+      body:
+        sort: [{"metadata.expires": order: "desc"}]
+    }
 
-  _key: ({name}) => "verifications:#{name}"
+    @elasticsearch.search query, (error, response) =>
+      return callback error if error?
+      return callback() if _.isEmpty response.hits?.hits
+
+      {name, success, expires} = response.hits.hits[0]._source.metadata
+      callback null, {name, success, expires}
+
+  _buildRecord: ({name, success, expires}) =>
+    dateStr = moment().format("YYYY-MM-DD")
+    return {
+      index: "#{@elasticsearchIndex}-#{dateStr}"
+      type: name
+      date: moment().valueOf()
+      body:
+        metadata: {name, success, expires}
+    }
 
 module.exports = VerificationsService

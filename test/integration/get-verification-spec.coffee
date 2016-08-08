@@ -1,23 +1,25 @@
 {afterEach, beforeEach, describe, it} = global
 {expect} = require 'chai'
+sinon    = require 'sinon'
 
-redis   = require 'fakeredis'
+_       = require 'lodash'
 moment  = require 'moment'
-RedisNS = require '@octoblu/redis-ns'
 request = require 'request'
-uuid    = require 'uuid'
 
 Server = require '../../src/server.coffee'
 
 describe 'Get last Verification', ->
   beforeEach (done) ->
-    clientId = uuid.v1()
-    @client  = new RedisNS 'meshblu-verifier', redis.createClient(clientId)
-    client   = new RedisNS 'meshblu-verifier', redis.createClient(clientId)
-
+    @elasticsearch = search: sinon.stub()
     octobluRaven = express: => handleErrors: => (req, res, next) => next()
 
-    @sut     = new Server {client, octobluRaven, disableLogging: true, username: 'billy', password: 'goat'}
+    @sut = new Server {
+      @elasticsearch
+      octobluRaven
+      elasticsearchIndex: 'lily-huwnesu'
+      disableLogging: true
+      username: 'billy'
+      password: 'goat'}
     @sut.run done
 
   afterEach (done) ->
@@ -33,9 +35,17 @@ describe 'Get last Verification', ->
     describe 'when a verification is not expired and successful', ->
       beforeEach (done) ->
         @expiration = moment().add(2, 'minutes').valueOf()
-        @client.lpush 'verifications:bob', JSON.stringify({name: 'bob', success: true, expires: @expiration}), done
 
-      beforeEach (done) ->
+        @elasticsearch.search.yields null, hits: hits: [{
+          _index: 'lily-huwnesu-2016-08-08'
+          _type: 'foo'
+          _source:
+            metadata:
+              name: 'bob'
+              success: true
+              expires: @expiration
+        }]
+
         request.get '/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
           done error
 
@@ -49,12 +59,32 @@ describe 'Get last Verification', ->
           expires: @expiration
         }
 
+      it 'should call elasticsearch.search', ->
+        expect(@elasticsearch.search).to.have.been.calledOnce
+
+        arg = _.first @elasticsearch.search.firstCall.args
+
+        expect(arg).to.deep.equal {
+          index: 'lily-huwnesu*'
+          type: 'bob'
+          body:
+            sort: [{"metadata.expires": order: "desc"}]
+        }
+
     describe 'when a verification is not expired and unsuccessful', ->
       beforeEach (done) ->
         @expiration = moment().add(2, 'minutes').valueOf()
-        @client.lpush 'verifications:bob', JSON.stringify({name: 'bob', success: false, expires: @expiration}), done
 
-      beforeEach (done) ->
+        @elasticsearch.search.yields null, hits: hits: [{
+          _index: 'lily-huwnesu-2016-08-08'
+          _type: 'foo'
+          _source:
+            metadata:
+              name: 'bob'
+              success: false
+              expires: @expiration
+        }]
+
         request.get '/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
           done error
 
@@ -71,9 +101,17 @@ describe 'Get last Verification', ->
     describe 'when a verification is expired', ->
       beforeEach (done) ->
         @expiration = moment().subtract(2, 'years').valueOf()
-        @client.lpush 'verifications:bob', JSON.stringify({name: 'bob', success: true, expires: @expiration}), done
 
-      beforeEach (done) ->
+        @elasticsearch.search.yields null, hits: hits: [{
+          _index: 'lily-huwnesu-2016-08-08'
+          _type: 'foo'
+          _source:
+            metadata:
+              name: 'bob'
+              success: false
+              expires: @expiration
+        }]
+
         request.get '/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
           done error
 
@@ -87,6 +125,8 @@ describe 'Get last Verification', ->
 
     describe 'when a verification does not exist', ->
       beforeEach (done) ->
+        @elasticsearch.search.yields null, hits: hits: []
+
         request.get '/verifications/non-extant/latest', @requestDefaults, (error, @response, @body) =>
           done error
 

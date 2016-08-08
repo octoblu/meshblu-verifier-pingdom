@@ -12,12 +12,15 @@ Router               = require './router'
 VerificationsService = require './services/verifications-service'
 
 class Server
-  constructor: ({@client, @disableLogging, @port, @octobluRaven, @username, @password})->
+  constructor: ({@disableLogging, @elasticsearch, @elasticsearchIndex, @port, @octobluRaven, @username, @password}) ->
     @octobluRaven ?= new OctobluRaven()
-    throw new Error 'Missing required parameter: client' unless @client?
+    
+    throw new Error 'Missing required parameter: elasticsearch' unless @elasticsearch?
+    throw new Error 'Missing required parameter: elasticsearchIndex' unless @elasticsearchIndex?
     throw new Error 'Missing required parameter: username' unless @username?
     throw new Error 'Missing required parameter: password' unless @password?
-    @verificationsService = new VerificationsService {@client}
+
+    @verificationsService = new VerificationsService {@elasticsearch, @elasticsearchIndex}
 
   address: =>
     @server.address()
@@ -45,7 +48,7 @@ class Server
   stop: (callback) =>
     @server.close callback
 
-  destroy: =>
-    @server.destroy()
+  destroy: (callback) =>
+    @server.destroy callback
 
 module.exports = Server

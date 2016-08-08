@@ -1,32 +1,34 @@
 {afterEach, beforeEach, describe, it} = global
 {expect} = require 'chai'
+sinon    = require 'sinon'
 
-redis   = require 'fakeredis'
 _       = require 'lodash'
 moment  = require 'moment'
-RedisNS = require '@octoblu/redis-ns'
 request = require 'request'
-uuid    = require 'uuid'
 
 Server = require '../../src/server.coffee'
 
 describe 'Store Verification', ->
   beforeEach (done) ->
-    clientId = uuid.v1()
-    @client  = new RedisNS 'meshblu-verifier', redis.createClient(clientId)
-    client   = new RedisNS 'meshblu-verifier', redis.createClient(clientId)
-
+    @elasticsearch = create: sinon.stub()
     octobluRaven = express: => handleErrors: => (req, res, next) => next()
 
-    @sut = new Server {client, octobluRaven, disableLogging: true, username: 'bobby', password: 'drop tables'}
+    @sut = new Server {
+      @elasticsearch
+      octobluRaven
+      elasticsearchIndex: 'verification:meshblu-protocol'
+      username: 'bobby'
+      password: 'drop tables'
+    }
     @sut.run done
 
   afterEach (done) ->
-    @sut.stop done
+    @sut.destroy done
 
   describe 'POST /verifications/foo/', ->
-    describe 'whith no existing verifications', ->
+    describe 'when called', ->
       beforeEach (done) ->
+        @elasticsearch.create.yields null
         @expiration = moment().add(2, 'minutes').valueOf()
 
         options =
@@ -41,51 +43,22 @@ describe 'Store Verification', ->
       it 'should respond with a 201', ->
         expect(@response.statusCode).to.equal 201
 
-      it 'should store the verification in redis', (done) ->
-        @client.lindex 'verifications:foo', 0, (error, verificationStr) =>
-          return done error if error?
-          verification = JSON.parse verificationStr
-          expect(verification).to.deep.equal {
-            name: 'foo'
-            success: true
-            expires: @expiration
+      it 'should store the verification in elasticsearch', ->
+        dateStr = moment().format "YYYY-MM-DD"
+
+        expect(@elasticsearch.create).to.have.been.called
+
+        arg = _.first @elasticsearch.create.firstCall.args
+        now = moment().valueOf()
+
+        expect(arg).to.containSubset {
+          index: "verification:meshblu-protocol-#{dateStr}"
+          type: 'foo'
+          body: {
+            metadata:
+              name: 'foo'
+              success: true
+              expires: @expiration
           }
-          done()
-
-    describe 'with 1000 existing verifications', ->
-      beforeEach (done) ->
-        verification  = {name: 'bar', success: true, expires: moment().subtract(1, 'day').valueOf()}
-        verifications = _.times 1000, => JSON.stringify(verification)
-        @client.lpush 'verifications:bar', verifications..., done
-
-      beforeEach (done) ->
-        @expiration = moment().add(2, 'minutes').valueOf()
-
-        options =
-          baseUrl: "http://localhost:#{@sut.address().port}"
-          auth: {username: 'bobby', password: 'drop tables'}
-          json:
-            success: true
-            expires: @expiration
-
-        request.post '/verifications/bar', options, (error, @response) => done error
-
-      it 'should respond with a 201', ->
-        expect(@response.statusCode).to.equal 201
-
-      it 'should store the verification in redis', (done) ->
-        @client.lindex 'verifications:bar', 0, (error, verificationStr) =>
-          return done error if error?
-          verification = JSON.parse verificationStr
-          expect(verification).to.deep.equal {
-            name: 'bar'
-            success: true
-            expires: @expiration
-          }
-          done()
-
-      it 'should remove the 1001th element', (done) ->
-        @client.llen 'verifications:bar', (error, count) =>
-          return done error if error?
-          expect(count).to.equal 1000
-          done()
+        }
+        expect(arg.date).to.be.closeTo now, 100
