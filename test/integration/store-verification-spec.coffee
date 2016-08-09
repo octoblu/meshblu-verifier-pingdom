@@ -37,6 +37,8 @@ describe 'Store Verification', ->
           json:
             success: true
             expires: @expiration
+            error:
+              message: 'uh oh'
 
         request.post '/verifications/foo', options, (error, @response) => done error
 
@@ -61,6 +63,9 @@ describe 'Store Verification', ->
               name: 'foo'
               success: true
               expires: @expiration
+            data:
+              error:
+                message: 'uh oh'
           }
         }
         expect(arg.body.date).to.be.closeTo now, 100

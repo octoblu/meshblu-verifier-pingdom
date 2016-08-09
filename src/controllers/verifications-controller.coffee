@@ -4,10 +4,12 @@ class VerificationsController
   constructor: ({@verificationsService}) ->
 
   create: (request, response) =>
+    console.log JSON.stringify request.body
     verification = {
       name:    request.params.name
       success: request.body.success
       expires: request.body.expires
+      error:   request.body.error
     }
 
     @verificationsService.create verification, (error) =>
