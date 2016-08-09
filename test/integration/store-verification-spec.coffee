@@ -39,6 +39,7 @@ describe 'Store Verification', ->
             expires: @expiration
             error:
               message: 'uh oh'
+              step: 'register'
 
         request.post '/verifications/foo', options, (error, @response) => done error
 
@@ -66,6 +67,7 @@ describe 'Store Verification', ->
             data:
               error:
                 message: 'uh oh'
+                step: 'register'
           }
         }
         expect(arg.body.date).to.be.closeTo now, 100
