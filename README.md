@@ -1,10 +1,13 @@
 # meshblu-verifier-pingdom
 
+[![Build Status](https://travis-ci.org/octoblu/meshblu-verifier-pingdom.svg?branch=master)](https://travis-ci.org/octoblu/meshblu-verifier-pingdom)
+[![Test Coverage](https://codecov.io/gh/octoblu/meshblu-verifier-pingdom/branch/master/graph/badge.svg)](https://codecov.io/gh/octoblu/meshblu-verifier-pingdom)
 [![Dependency status](http://img.shields.io/david/octoblu/meshblu-verifier-pingdom.svg?style=flat)](https://david-dm.org/octoblu/meshblu-verifier-pingdom)
 [![devDependency Status](http://img.shields.io/david/dev/octoblu/meshblu-verifier-pingdom.svg?style=flat)](https://david-dm.org/octoblu/meshblu-verifier-pingdom#info=devDependencies)
-[![Build Status](http://img.shields.io/travis/octoblu/meshblu-verifier-pingdom.svg?style=flat)](https://travis-ci.org/octoblu/meshblu-verifier-pingdom)
+[![Slack Status](http://community-slack.octoblu.com/badge.svg)](http://community-slack.octoblu.com)
 
 [![NPM](https://nodei.co/npm/meshblu-verifier-pingdom.svg?style=flat)](https://npmjs.org/package/meshblu-verifier-pingdom)
+
 
 ## Installing
 
