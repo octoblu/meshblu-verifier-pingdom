@@ -88,15 +88,11 @@ describe 'Get last Verification', ->
         request.get '/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
           done error
 
-      it 'should respond with a 200', ->
-        expect(@response.statusCode).to.equal 200
+      it 'should respond with a 424', ->
+        expect(@response.statusCode).to.equal 424
 
       it 'should respond with the verification', ->
-        expect(@body).to.deep.equal {
-          name: 'bob'
-          success: false
-          expires: @expiration
-        }
+        expect(@body.error).to.equal 'Verification was found, but failed'
 
     describe 'when a verification is expired', ->
       beforeEach (done) ->
