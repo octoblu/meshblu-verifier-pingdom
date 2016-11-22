@@ -19,7 +19,7 @@ class VerificationsController
     @verificationsService.getLatest name: request.params.name, (error, verification) =>
       return response.sendError error if error?
       return response.sendError @_verificationNotFound() unless verification?
-      return response.sendError @_verificationExpired() if verification.expires < moment().valueOf()
+      return response.sendError @_verificationExpired() if moment().utc().isAfter(verification.expires)
       return response.sendError @_verificationFailed() unless verification.success
       return response.send verification
 

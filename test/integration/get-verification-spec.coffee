@@ -8,18 +8,18 @@ request = require 'request'
 
 Server = require '../../src/server.coffee'
 
-describe 'Get last Verification', ->
+describe 'Get Verification', ->
   beforeEach (done) ->
     @elasticsearch = search: sinon.stub()
-    octobluRaven = express: => handleErrors: => (req, res, next) => next()
-
+    @logFn = sinon.spy()
     @sut = new Server {
       @elasticsearch
-      octobluRaven
       elasticsearchIndex: 'lily-huwnesu'
       disableLogging: true
       username: 'billy'
-      password: 'goat'}
+      password: 'goat'
+      @logFn
+    }
     @sut.run done
 
   afterEach (done) ->
@@ -34,7 +34,7 @@ describe 'Get last Verification', ->
   describe 'GET /verifications/foo/latest', ->
     describe 'when a verification is not expired and successful', ->
       beforeEach (done) ->
-        @expiration = moment().add(2, 'minutes').valueOf()
+        @expiration = moment().add(2, 'minutes').utc().format()
 
         @elasticsearch.search.yields null, hits: hits: [{
           _index: 'lily-huwnesu-2016-08-08'
@@ -73,7 +73,7 @@ describe 'Get last Verification', ->
 
     describe 'when a verification is not expired and unsuccessful', ->
       beforeEach (done) ->
-        @expiration = moment().add(2, 'minutes').valueOf()
+        @expiration = moment().add(2, 'minutes').utc().format()
 
         @elasticsearch.search.yields null, hits: hits: [{
           _index: 'lily-huwnesu-2016-08-08'
@@ -96,7 +96,7 @@ describe 'Get last Verification', ->
 
     describe 'when a verification is expired', ->
       beforeEach (done) ->
-        @expiration = moment().subtract(2, 'years').valueOf()
+        @expiration = moment().subtract(2, 'years').utc().format()
 
         @elasticsearch.search.yields null, hits: hits: [{
           _index: 'lily-huwnesu-2016-08-08'

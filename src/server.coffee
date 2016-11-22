@@ -1,20 +1,21 @@
 basicAuth            = require 'basic-auth-connect'
-cors                 = require 'cors'
-morgan               = require 'morgan'
-express              = require 'express'
-bodyParser           = require 'body-parser'
-OctobluRaven         = require 'octoblu-raven'
+expressOctoblu       = require 'express-octoblu'
 enableDestroy        = require 'server-destroy'
-sendError            = require 'express-send-error'
-packageVersion       = require 'express-package-version'
-meshbluHealthcheck   = require 'express-meshblu-healthcheck'
-Router               = require './router'
 VerificationsService = require './services/verifications-service'
+Router               = require './router'
 
 class Server
-  constructor: ({@disableLogging, @elasticsearch, @elasticsearchIndex, @port, @octobluRaven, @username, @password}) ->
-    @octobluRaven ?= new OctobluRaven()
-    
+  constructor: (options) ->
+    {
+      @disableLogging,
+      @elasticsearch,
+      @elasticsearchIndex,
+      @port,
+      @username,
+      @password,
+      @logFn,
+    } = options
+
     throw new Error 'Missing required parameter: elasticsearch' unless @elasticsearch?
     throw new Error 'Missing required parameter: elasticsearchIndex' unless @elasticsearchIndex?
     throw new Error 'Missing required parameter: username' unless @username?
@@ -26,18 +27,8 @@ class Server
     @server.address()
 
   run: (callback) =>
-    app = express()
-    app.use @octobluRaven.express().handleErrors()
-    app.use sendError()
-    app.use meshbluHealthcheck()
-    app.use packageVersion()
-    app.use morgan 'dev', immediate: false unless @disableLogging
-    app.use cors()
-    app.use bodyParser.urlencoded limit: '1mb', extended : true
-    app.use bodyParser.json limit : '1mb'
+    app = expressOctoblu({@disableLogging, @logFn})
     app.use basicAuth @username, @password
-
-    app.options '*', cors()
 
     router = new Router {@verificationsService}
     router.route app

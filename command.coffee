@@ -1,7 +1,8 @@
-elasticsearch = require 'elasticsearch'
-_             = require 'lodash'
-OctobluRaven  = require 'octoblu-raven'
-Server        = require './src/server'
+_              = require 'lodash'
+elasticsearch  = require 'elasticsearch'
+SigtermHandler = require 'sigterm-handler'
+OctobluRaven   = require 'octoblu-raven'
+Server         = require './src/server'
 
 MISSING_ENV = 'Missing required environment variable:'
 
@@ -13,6 +14,7 @@ class Command
     @octobluRaven.patchGlobal()
 
   panic: (error) =>
+    @octobluRaven.reportError(error)
     console.error error.stack
     process.exit 1
 
@@ -24,7 +26,6 @@ class Command
     @panic new Error("#{MISSING_ENV} HTTP_PASSWORD")       if _.isEmpty process.env.HTTP_PASSWORD
 
     server = new Server
-
       octobluRaven:       @octobluRaven
       elasticsearch:      elasticsearch.Client host: process.env.ELASTICSEARCH_URI
       elasticsearchIndex: process.env.ELASTICSEARCH_INDEX
@@ -35,14 +36,11 @@ class Command
 
     server.run (error) =>
       return @panic error if error?
-
       {port} = server.address()
       console.log "MeshbluVerifierPingdomService listening on port: #{port}"
 
-    process.on 'SIGTERM', =>
-      console.log 'SIGTERM caught, exiting'
-      server.stop =>
-        process.exit 0
+    sigtermHandler = new SigtermHandler { events: ['SIGTERM', 'SIGINT'] }
+    sigtermHandler.register server.stop
 
 command = new Command()
 command.handleErrors()

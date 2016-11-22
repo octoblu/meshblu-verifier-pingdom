@@ -11,11 +11,12 @@ Server = require '../../src/server.coffee'
 describe 'Store Verification', ->
   beforeEach (done) ->
     @elasticsearch = create: sinon.stub()
-    octobluRaven = express: => handleErrors: => (req, res, next) => next()
+    @logFn = sinon.spy()
 
     @sut = new Server {
       @elasticsearch
-      octobluRaven
+      @logFn,
+      disableLogging: true
       elasticsearchIndex: 'verification:meshblu-protocol'
       username: 'bobby'
       password: 'drop tables'
@@ -29,7 +30,7 @@ describe 'Store Verification', ->
     describe 'when called', ->
       beforeEach (done) ->
         @elasticsearch.create.yields null
-        @expiration = moment().add(2, 'minutes').valueOf()
+        @expiration = moment().add(2, 'minutes').utc().format()
 
         options =
           baseUrl: "http://localhost:#{@sut.address().port}"
