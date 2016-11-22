@@ -1,6 +1,6 @@
 {
   "name": "meshblu-verifier-pingdom",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Put some description here",
   "keywords": [
     "Octoblu",
@@ -19,7 +19,7 @@
   },
   "scripts": {
     "start": "node command.js",
-    "test": "istanbul cover _mocha -- -R spec --require coffee-coverage/register-istanbul && mocha --reporter json > coverage/mocha.json",
+    "test": "mocha",
     "coverage": "nyc npm test",
     "mocha:json": "env NPM_ENV=test mocha --reporter json > coverage/mocha.json",
     "test:watch": "mocha -w -R mocha-multi --reporter-options spec=-,mocha-osx-reporter=-"
