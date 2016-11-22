@@ -18,6 +18,7 @@ describe 'Get Verification', ->
       disableLogging: true
       username: 'billy'
       password: 'goat'
+      port: 0xd00d
       @logFn
     }
     @sut.run done

@@ -20,6 +20,7 @@ describe 'Store Verification', ->
       elasticsearchIndex: 'verification:meshblu-protocol'
       username: 'bobby'
       password: 'drop tables'
+      port: 0xd00d
     }
     @sut.run done
 
