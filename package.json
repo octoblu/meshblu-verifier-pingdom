@@ -1,6 +1,6 @@
 {
   "name": "meshblu-verifier-pingdom",
-  "version": "4.0.13",
+  "version": "4.0.14",
   "description": "Put some description here",
   "keywords": [
     "Octoblu",
@@ -46,7 +46,8 @@
     "lodash": "^4.17.4",
     "moment": "^2.17.1",
     "server-destroy": "^1.0.1",
-    "sigterm-handler": "^2.0.0"
+    "sigterm-handler": "^2.0.0",
+    "uuid": "^3.0.1"
   },
   "license": "MIT",
   "optionalDependencies": {},

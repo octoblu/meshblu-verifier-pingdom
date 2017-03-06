@@ -1,5 +1,6 @@
 _      = require 'lodash'
 moment = require 'moment'
+UUID = require 'uuid'
 debug = require('debug')('meshblu-verifier-pingdom:verifications-service')
 
 class VerificationsService
@@ -34,6 +35,7 @@ class VerificationsService
     index   = "#{@elasticsearchIndex}-#{dateStr}"
 
     return {
+      id: UUID.v4()
       index: index
       type: name
       body:
