@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 
 COPY package.json yarn.lock /usr/src/app/
 
-RUN yarn install
+RUN yarn install --production
 
 COPY . /usr/src/app
 
