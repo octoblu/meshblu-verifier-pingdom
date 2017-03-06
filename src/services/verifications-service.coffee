@@ -1,5 +1,6 @@
 _      = require 'lodash'
 moment = require 'moment'
+debug = require('debug')('meshblu-verifier-pingdom:verifications-service')
 
 class VerificationsService
   constructor: ({@elasticsearch, @elasticsearchIndex}) ->
@@ -8,10 +9,10 @@ class VerificationsService
 
   create: ({name, success, expires, error}, callback) =>
     record = @_buildRecord({name, success, expires, error})
+    debug {record}
 
     @elasticsearch.create record, (err) =>
       callback err
-
 
   getLatest: ({name}, callback) =>
     query = {
