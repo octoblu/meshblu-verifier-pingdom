@@ -1,4 +1,4 @@
-FROM node:7
+FROM node:7-alpine
 MAINTAINER Octoblu <docker@octoblu.com>
 
 ENV NPM_CONFIG_LOGLEVEL error
