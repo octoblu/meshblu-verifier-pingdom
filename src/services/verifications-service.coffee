@@ -32,6 +32,7 @@ class VerificationsService
       callback null, {name, success, expires}
 
   _buildRecord: ({name, success, expires, error}) =>
+    error   = @_sanitizeError error
     dateStr = moment().format("YYYY-MM-DD")
     index   = "#{@elasticsearchIndex}-#{dateStr}"
 
@@ -46,5 +47,10 @@ class VerificationsService
         metadata: {name, success, expires}
         data: {error}
     }
+
+  _sanitizeError: (error) =>
+    return unless error?
+    return error if _.isInteger error.code
+    return _.omit error, 'code'
 
 module.exports = VerificationsService

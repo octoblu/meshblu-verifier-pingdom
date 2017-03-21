@@ -73,3 +73,31 @@ describe 'Store Verification', ->
           }
         }
         expect(arg.body.date).to.be.closeTo now, 100
+
+    describe 'when called with a non-integer', ->
+      beforeEach (done) ->
+        @elasticsearch.create.yields null
+        @expiration = moment().add(2, 'minutes').utc().format()
+
+        options =
+          baseUrl: "http://localhost:#{@sut.address().port}"
+          auth: {username: 'bobby', password: 'drop tables'}
+          json:
+            success: true
+            expires: @expiration
+            error:
+              message: 'uh oh'
+              step: 'register'
+              code: 'ETIMEOUT'
+
+        request.post '/verifications/foo', options, (error, @response) => done error
+
+      it 'should respond with a 201', ->
+        expect(@response.statusCode).to.equal 201
+
+      it 'should store the verification in elasticsearch', ->
+        expect(@elasticsearch.create).to.have.been.called
+
+        arg = _.first @elasticsearch.create.firstCall.args
+
+        expect(arg.body.data.error).not.to.have.property 'code'
