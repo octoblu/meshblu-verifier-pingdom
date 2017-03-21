@@ -25,6 +25,7 @@ class VerificationsService
 
     @elasticsearch.search query, (err, response) =>
       return callback err if err?
+      return callback() unless _.has response, 'hits.hits.0._source.metadata'
       return callback() if _.isEmpty response.hits?.hits
 
       {name, success, expires} = response.hits.hits[0]._source.metadata
