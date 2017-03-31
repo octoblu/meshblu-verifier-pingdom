@@ -9,7 +9,6 @@ class VerificationsController
       success: request.body.success
       expires: request.body.expires
       error:   request.body.error
-      stats:   request.body.stats
     }
 
     @verificationsService.create verification, (error) =>

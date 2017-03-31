@@ -75,11 +75,6 @@ describe 'Store Verification', ->
               error:
                 message: 'uh oh'
                 step: 'register'
-              stats:
-                operation: 'doin-somethin'
-                startTime: '2016-01-12T01:00:00.000Z'
-                endTime:   '2016-01-12T02:00:00.000Z'
-                duration:  12345
           }
         }
         expect(arg.body.date).to.be.closeTo now, 100
