@@ -8,8 +8,8 @@ class VerificationsService
     throw new Error 'Missing required parameter: elasticsearch' unless @elasticsearch?
     throw new Error 'Missing required parameter: elasticsearchIndex' unless @elasticsearchIndex?
 
-  create: ({name, success, expires, error}, callback) =>
-    record = @_buildRecord({name, success, expires, error})
+  create: ({name, success, expires, error, stats}, callback) =>
+    record = @_buildRecord({name, success, expires, error, stats})
     debug {record}
 
     @elasticsearch.create record, (err) =>
@@ -31,7 +31,7 @@ class VerificationsService
       {name, success, expires} = response.hits.hits[0]._source.metadata
       callback null, {name, success, expires}
 
-  _buildRecord: ({name, success, expires, error}) =>
+  _buildRecord: ({name, success, expires, error, stats}) =>
     error   = @_sanitizeError error
     dateStr = moment().format("YYYY-MM-DD")
     index   = "#{@elasticsearchIndex}-#{dateStr}"
@@ -45,7 +45,7 @@ class VerificationsService
         type: name
         date: moment().valueOf()
         metadata: {name, success, expires}
-        data: {error}
+        data: {error, stats}
     }
 
   _sanitizeError: (error) =>
