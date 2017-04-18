@@ -29,7 +29,8 @@ class VerificationsService
       return callback() if _.isEmpty response.hits?.hits
 
       {name, success, expires} = response.hits.hits[0]._source.metadata
-      callback null, {name, success, expires}
+      data = response.hits.hits[0]._source.data
+      callback null, {name, success, expires, data}
 
   _buildRecord: ({name, success, expires, error}) =>
     error   = @_sanitizeError error

@@ -134,3 +134,117 @@ describe 'Get Verification', ->
         expect(@body).to.deep.equal {
           error: 'Verification was not found'
         }
+
+  describe 'GET /v2/verifications/foo/latest', ->
+    describe 'when a verification is not expired and successful', ->
+      beforeEach (done) ->
+        @expiration = moment().add(2, 'minutes').utc().format()
+
+        @elasticsearch.search.yields null, hits: hits: [{
+          _index: 'lily-huwnesu-2016-08-08'
+          _type: 'foo'
+          _source:
+            metadata:
+              name: 'bob'
+              success: true
+              expires: @expiration
+        }]
+
+        request.get '/v2/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
+          done error
+
+      it 'should respond with a 200', ->
+        expect(@response.statusCode).to.equal 200
+
+      it 'should respond with the verification', ->
+        expect(@response.body).to.deep.equal {
+          name: 'bob'
+          success: true
+          expires: @expiration
+        }
+
+      it 'should call elasticsearch.search', ->
+        expect(@elasticsearch.search).to.have.been.calledOnce
+
+        arg = _.first @elasticsearch.search.firstCall.args
+
+        expect(arg).to.deep.equal {
+          index: 'lily-huwnesu*'
+          type: 'bob'
+          body:
+            sort: [{"metadata.expires": order: "desc"}]
+        }
+
+    describe 'when a verification is not expired and unsuccessful', ->
+      beforeEach (done) ->
+        @expiration = moment().add(2, 'minutes').utc().format()
+
+        @elasticsearch.search.yields null, hits: hits: [{
+          _index: 'lily-huwnesu-2016-08-08'
+          _type: 'foo'
+          _source:
+            metadata:
+              name: 'bob'
+              success: false
+              expires: @expiration
+            data:
+              error:
+                message:'uh oh'
+                step: 'register'
+        }]
+
+        request.get '/v2/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
+          done error
+
+      it 'should respond with a 424', ->
+        expect(@response.statusCode).to.equal 424
+
+      it 'should respond with verification result', ->
+        expect(@body.metadata.error).to.equal("Verification was found, but failed")
+
+      it 'should respond with additional error details', ->
+        expect(@body.data).to.deep.equal {
+          name: 'bob'
+          success: false
+          expires: @expiration
+          data:
+            error:
+              message:'uh oh'
+              step: 'register'
+        }
+
+    describe 'when a verification is expired', ->
+      beforeEach (done) ->
+        @expiration = moment().subtract(2, 'years').utc().format()
+
+        @elasticsearch.search.yields null, hits: hits: [{
+          _index: 'lily-huwnesu-2016-08-08'
+          _type: 'foo'
+          _source:
+            metadata:
+              name: 'bob'
+              success: false
+              expires: @expiration
+        }]
+
+        request.get '/v2/verifications/bob/latest', @requestDefaults, (error, @response, @body) =>
+          done error
+
+      it 'should respond with a 410', ->
+        expect(@response.statusCode).to.equal 410
+
+      it 'should respond with an error', ->
+        expect(@body.metadata.error).to.equal ('Verification was found, but was expired')
+
+    describe 'when a verification does not exist', ->
+      beforeEach (done) ->
+        @elasticsearch.search.yields null, hits: hits: []
+
+        request.get '/v2/verifications/non-extant/latest', @requestDefaults, (error, @response, @body) =>
+          done error
+
+      it 'should respond with a 404', ->
+        expect(@response.statusCode).to.equal 404
+
+      it 'should respond with an error', ->
+        expect(@body.metadata.error).to.equal ('Verification was not found')
